@@ -31,15 +31,20 @@ namespace m0st4fa {
 	protected:
 		int pMySockFd = 0;
 
-		int _initialize_connection(const sockaddr_storage* const, int) const;
-		std::string_view _receive_sentence(const int, char* const, const size_t) const;
+		int _initialize_connection(int, const sockaddr_storage* const) const;
+		std::string_view _receive_sentence(const int, char* const, const size_t, int&) const;
 		virtual std::string _format(const std::string_view msg) const = 0;
 		virtual std::string _format(const std::string_view msg, const std::string_view arg1) const = 0;
 		virtual std::string _format(const std::string_view msg, const std::string_view arg1, const std::string_view arg2) const = 0;
 
+		int _closeSocket(int sockFd);
+
 	public:
 
-		unsigned int BACK_LOG = 10;
+		static std::string_view receive(const int, const size_t, int&);
+		static int send(const int, const std::string_view);
+		static std::string formatFckingMSErrorMessages(const int);
+		static constexpr unsigned int BACK_LOG = 10;
 
 		ConnectionInformation() {
 			// Initialize to zero
@@ -53,7 +58,7 @@ namespace m0st4fa {
 		}
 		~ConnectionInformation() {
 			::freeaddrinfo(mMyInfo);
-			::closesocket(this->pMySockFd);
+			this->closeCurrentConnection();
 		}
 
 		int setDeviceAddress(const unsigned int);
@@ -68,6 +73,46 @@ namespace m0st4fa {
 		int getBoundPort() const {
 			sockaddr_in* addr = (sockaddr_in*)this->mMyBoundName->ai_addr;
 			return ntohs(addr->sin_port);
+		}
+		int closeCurrentConnection();
+
+	};
+
+	class Sockets {
+
+		pollfd* sockets;
+		size_t length = 0;
+		size_t capacity;
+
+	public:
+		Sockets(size_t initSz = 10) : capacity{initSz}, sockets { new pollfd[initSz] } {
+		}
+
+		/**
+		 * @brief Gets the element at index `i`.
+		 * @param[in] i The index of the element to be retrieved.
+		 * @returns A copy of the element at index `i`.
+		 */
+		pollfd at(const size_t i) const {
+			return this->sockets[i];
+		};
+		void add(const int, const int);
+		int remove(const int);
+
+		/**
+		 * @brief Gets the underlying `pollfd` collection.
+		 * @returns The underlying set of `pollfd` collection.
+		 */
+		pollfd* getSockets() const {
+			return this->sockets;
+		}
+
+		/**
+		 * @brief Gets the number of elements stored in the collection.
+		 * @returns The number of elements stored in the collection.
+		 */
+		size_t getLength() const {
+			return this->length;
 		}
 
 	};

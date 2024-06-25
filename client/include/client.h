@@ -34,12 +34,14 @@ namespace m0st4fa {
 		}
 
 		~Client() {
+			this->closeCurrentConnection();
 			freeaddrinfo(mServerInfo);
 		}
 
 		int connect();
-		std::string_view receive(const size_t);
-		int send(const std::string_view msg);
+		std::string_view receive(const size_t, int&) const;
+
+		int send(const std::string_view msg) const;
 
 	};
 

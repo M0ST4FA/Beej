@@ -63,6 +63,7 @@ namespace m0st4fa {
 		return std::vformat(_format_client(msg).data(), std::make_format_args(arg1, arg2));
 	}
 
+	// TODO: Document this!
 	int Client::connect()
 	{
 		int rv = ::connect(this->pMySockFd, this->mServerInfo->ai_addr, this->mServerInfo->ai_addrlen);
@@ -78,20 +79,27 @@ namespace m0st4fa {
 		return 0;
 	}
 
-	std::string_view Client::receive(const size_t byteN)
+	// TODO: THIS NEEDS A COMPLETE CHANGE AFTER ENCAPSULATING DATA TO BE ABLE TO GET DATA OF ANY LENGTH.
+	// TODO: Make it use std::string instead to not have memory leaks.
+	/**
+	 * @brief Receives data from the connected socket.
+	 * @param[in] byteN The size of the data to be received.
+	 * @param[in] nbytes How many bytes have been received.
+	 * @returns The received data.
+	 */
+	std::string_view Client::receive(const size_t byteN, int& nbytes) const
 	{
-		char* buf = new char[byteN] {};
-
-		::recv(this->pMySockFd, buf, byteN, 0);
-
-		return std::string_view{ buf };
+		return ConnectionInformation::receive(this->pMySockFd, byteN, nbytes);
 	}
 
-	int Client::send(const std::string_view msg)
+	/**
+	 * @brief Sends `msg` to connected server.
+	 * @param[in] msg Message to be sent.
+	 * @returns `0` if everything was sent successfully; otherwise, the number of bytes that remain to be sent (which implies an error has occurred while sending the data.)
+	 */
+	int Client::send(const std::string_view msg) const
 	{
-
-		::send(this->pMySockFd, msg.data(), msg.length(), 0);
-
-		return 0;
+		return ConnectionInformation::send(this->pMySockFd, msg);
 	}
+
 }

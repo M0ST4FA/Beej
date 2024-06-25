@@ -1,5 +1,9 @@
 ﻿#include "include/interface.h"
 
+static void fn(const int sockFd, std::string_view recvData) {
+	m0st4fa::ConnectionInformation::send(sockFd, recvData);
+};
+
 int main()
 {
 
@@ -8,7 +12,7 @@ int main()
 
 	m0st4fa::Server server{3490};
 
-	server.acceptConnections();
+	server.start(fn);
 
 	return 0;
 }
